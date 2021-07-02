@@ -2,12 +2,50 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="mappers.employeeMapper">
-<select id="empNo" resultType="string">
+<sql id="baseColumn">
+	    EMPLOYEE_ID employeeId,EMP_USERID empUserId,
+  		EMP_PW empPw,EMP_NAME empName,
+		HIRE_DATE hireDate,JOB_ID jobId,
+		PH_NUMBER phNumber,OFFICE_NUMBER officeNumber,
+		EMAIL email,EMP_ADDRESS empAddress 
+</sql>
+<!-- 작원정보 삭제 -->
+<delete id="empDelete" parameterType="string">
+	delete from employees
+	where EMPLOYEE_ID = #{empId}
+
+
+</delete>
+
+<!-- 직원정보 업데이트,수정 -->
+<update id="empUpdate" parameterType="Model.EmployeeDTO">
+   		update employees
+		set JOB_ID = #{jobId}, PH_NUMBER = #{phNumber}, 
+		OFFICE_NUMBER = #{officeNumber}, EMAIL = #{email},  
+		EMP_ADDRESS = #{empAddress}
+		where EMPLOYEE_ID=#{employeeId}
+
+</update>
+
+<select id="empNo" resultType="string" >
 	select nvl(max(EMPLOYEE_ID),0) + 1 from employees
 </select>
+
+<select id="empInfo" parameterType="string" resultType="Model.EmployeeDTO">
+select <include refid="baseColumn"/>
+ from employees
+ where employee_id=#{empId}
+</select>
+
+<select id="empList" resultType="Model.EmployeeDTO">
+ select <include refid="baseColumn"/>
+ from employees
+</select>
+
 <insert id="empInsert" parameterType="Model.EmployeeDTO">
 	insert into employees(employee_id,emp_userid,emp_pw,emp_name,hire_date,job_id,ph_number,office_number,email,emp_address)
 	values(#{employeeId},#{empUserId},#{empPw},#{empName},#{hireDate},
 		   #{jobId},#{phNumber},#{officeNumber},#{email},#{empAddress})
-</insert>	
+</insert>
+	
 </mapper>

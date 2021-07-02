@@ -7,12 +7,19 @@ import org.springframework.ui.Model;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 
+import Model.AuthInfoDTO;
 import command.EmployeeCommand;
+import service.employee.EmployeeDeleteService;
+import service.employee.EmployeeInfoService;
 import service.employee.EmployeeJoinService;
+import service.employee.EmployeeListService;
 import service.employee.EmployeeNumService;
+import service.employee.EmployeeUpdateService;
+import service.main.LoginService;
 import validator.EmployeeCommandValidator;
-
+//model==request!!
 @Controller
 @RequestMapping("/emp")
 public class EmployeeController {
@@ -20,8 +27,39 @@ public class EmployeeController {
 	EmployeeNumService employeeNumService;
 	@Autowired
 	EmployeeJoinService employeeJoinService;
+	@Autowired
+	EmployeeListService employeeListService;
+	@Autowired
+	EmployeeInfoService employeeInfoService;
+	@Autowired
+	EmployeeUpdateService employeeUpdateService;
+	@Autowired
+	EmployeeDeleteService employeeDeleteService;
+	@RequestMapping("empDelete")
+	public String empDelete(@RequestParam(value="empId")String empId) {
+		employeeDeleteService.empDelete(empId);
+		return "redirect:empList";
+			}
+	@RequestMapping(value="empModifyOk" ,method = RequestMethod.POST)
+	public String empModifyOk(EmployeeCommand employeeCommand ) {
+		employeeUpdateService.empUpdate(employeeCommand);
+		return "redirect:empList";
+	}
+	
+	@RequestMapping("empModify")
+		public String empModify(@RequestParam(value="empId")String empId, Model model) {
+			employeeInfoService.empInfo(empId,model);			
+			return "employee/employeeModify";
+		}
+	
+	@RequestMapping("empInfo")
+	public String empInfo(@RequestParam(value="empId")String empId, Model model) {
+		employeeInfoService.empInfo(empId,model);
+		return "employee/employeeInfo";
+	}
 	@RequestMapping(value = "empList", method = RequestMethod.GET)
-	public String empList() {
+	public String empList(Model model) {
+		employeeListService.empList(model);
 		return "employee/employeeList";
 	}
 	@RequestMapping(value= "empRegist",method = RequestMethod.GET	)
@@ -29,16 +67,21 @@ public class EmployeeController {
 		employeeNumService.empNo(model,employeeCommand);
 		return "employee/employeeForm";
 	}
+	@Autowired
+	LoginService loginService;
 	@RequestMapping(value = "empJoin",method = RequestMethod.POST)
 	public String empJoin(EmployeeCommand employeeCommand,Errors errors,Model model) {
 		//command 객체는 html로 부터 넘어온 값을 저장한다
 		//그러므로 @requestparam으로 받아올 필요 없당
-		System.out.println("empJoin"+employeeCommand.getEmpName());
-		System.out.println("empJoin:" + employeeCommand.getEmpName());
 		new EmployeeCommandValidator().validate(employeeCommand,errors);
 		if(errors.hasErrors()) {
 			return "employee/employeeForm";
 			
+		}
+		AuthInfoDTO authInfo = loginService.logIn(employeeCommand.getEmpUserId(),employeeCommand.getEmpPw());
+		if(authInfo!=null) {
+			errors.rejectValue("empUserId", "duplicate");
+			return "employee/employeeForm";
 		}
 		employeeJoinService.empInsert(employeeCommand);
 		return "redirect:empList" ;
