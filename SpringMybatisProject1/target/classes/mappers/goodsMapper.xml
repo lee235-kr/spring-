@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  <mapper namespace="mapers.goodsMapper">
+  
+  <delete id="cartRemove" parameterType="hashMap">
+	delete from cart
+	<where>
+		<if test="prodNums != null">
+	   mem_id = #{memId} and prod_num in
+		<foreach collection="prodNums" item="prodNum" index="index" open="(" close=")" separator=",">
+			#{prodNum}
+		</foreach>
+		</if>
+	</where>
+</delete>
+  
+  <delete id="cartProdDel" parameterType="Model.CartDTO">
+  	delete from cart
+  	where mem_id =#{memId}
+  	and prod_num =#{prodNum}
+  	
+  </delete>
+  
+  <!-- association이 있는 맵은결과를 하나만 뽑아냄 그래서 하나만 받에만듬-->
+  <!--  두 테이블에 있는 값을 1:1로 가져올 때 association -->
+<resultMap type="Model.ProductCartDTO" id="productCartMap">
+	<association property="productDTO" javaType="Model.GoodsDTO">
+		<result column="PROD_SUPPLYER" jdbcType="VARCHAR" property="prodSupplyer"/>
+		<result column="PROD_DEL_FEE" jdbcType="BIGINT" property="prodDelFee"/>
+		<result column="PROD_IMAGE" jdbcType="VARCHAR" property="prodImage"/>
+		<result column="PROD_NAME" jdbcType="VARCHAR" property="prodName"/>
+		<result column="PROD_PRICE" jdbcType="BIGINT" property="prodPrice"/>
+	</association>
+	<association property="cartDTO" javaType="Model.CartDTO">
+		<id column="PROD_NUM" jdbcType="BIGINT" property="prodNum"/>
+		<id column="mem_id" jdbcType="VARCHAR" property="memId"/>
+		<result column="CART_PRICE" jdbcType="BIGINT" property="cartPrice"/>
+		<result column="CART_QTY" jdbcType="BIGINT" property="cartQty"/>
+	</association>
+</resultMap>
+<insert id="purchaseInsert" parameterType="Model.PurchaseDTO">
+	insert into purchase(PURCHASE_NUM, MEM_ID, PURCHASE_TOT_PRICE,PURCHASE_ADDR,
+	PURCHASE_METHOD, PURCHASE_REQUEST, RECEIVER_NAME, RECEIVER_PHONE,
+	PURCHASE_DATE)
+	values(#{purchaseNum},#{memId},#{purchaseTotPrice},#{purchaseAddr},
+	#{purchaseMethod},#{purchaseRequest},#{receiverName},#{receiverPhone},
+	sysdate)
+</insert>
+
+<resultMap type="Model.GoodsReviewsDTO" id="goodsReviewsMap">
+	<association property="goods" javaType="Model.GoodsDTO">
+		<id column="PROD_NUM" jdbcType="BIGINT" property="prodNum" />
+		<result column="PROD_NAME" jdbcType="VARCHAR" property="prodName" />
+		<result column="PROD_PRICE" jdbcType="BIGINT" property="prodPrice" />
+		<result column="PROD_IMAGE" jdbcType="VARCHAR" property="prodImage" />
+		<result column="PROD_DETAIL" jdbcType="VARCHAR" property="prodDetail" />
+		<result column="PROD_CAPACITY" jdbcType="BIGINT" property="prodCapacity" />
+		<result column="PROD_SUPPLYER" jdbcType="VARCHAR" property="prodSupplyer" />
+		<result column="prod_Del_Fee" jdbcType="BIGINT" property="prodDelFee" />
+		<result column="RECOMMEND" jdbcType="VARCHAR" property="recommend" />
+		<result column="EMPLOYEE_ID" jdbcType="BIGINT" property="employeeId" />
+		<result column="CTGR" jdbcType="VARCHAR" property="ctgr" />
+	</association>
+	<collection property="reviews" ofType="Model.ReviewDTO">
+		<id column="PURCHASE_NUM" jdbcType="BIGINT" property="purchaseNum"/>
+		<id column="PROD_NUM" jdbcType="BIGINT" property="prodNum"/>
+		<result column="REVIEW_DATE" jdbcType="DATE" property="reviewDate"/>
+		<result column="REVIEW_CONTENT" jdbcType="VARCHAR" property="reviewContent"/>
+		<result column="REVIEW_IMG" jdbcType="VARCHAR" property="reviewImg"/>
+	</collection>
+</resultMap>
+
+<select id="reviewInfo" parameterType="Model.ReviewDTO" 
+							resultType="Model.ReviewDTO">
+	select PURCHASE_NUM purchaseNum, PROD_NUM prodNum, 
+			REVIEW_DATE reviewDate, REVIEW_CONTENT reviewContent,
+			REVIEW_IMG reviewImg
+	from review
+	where PURCHASE_NUM = #{purchaseNum} and PROD_NUM = #{prodNum}
+</select>
+<update id="reviewUpdate" parameterType="Model.ReviewDTO">
+	update review
+	set review_content = #{reviewContent}
+	where PURCHASE_NUM = #{purchaseNum} and PROD_NUM = #{prodNum}
+</update>
+	
+
+<select id="goodsReviews" parameterType="string" resultMap="goodsReviewsMap">
+select P.PROD_NUM, PROD_NAME, PROD_PRICE, PROD_IMAGE, PROD_DETAIL, PROD_CAPACITY,
+			PROD_SUPPLYER,prod_Del_Fee, RECOMMEND , EMPLOYEE_ID, CTGR, 
+			PURCHASE_NUM , REVIEW_DATE, REVIEW_CONTENT, REVIEW_IMG
+from products P , review R
+WHERE P.PROD_NUM = R.PROD_NUM(+) AND P.PROD_NUM = #{prodNum}
+</select>							
+
+<insert id="reviewWrite" parameterType="Model.ReviewDTO">
+	insert into review (PURCHASE_NUM,PROD_NUM,REVIEW_DATE,REVIEW_CONTENT,
+						REVIEW_IMG)
+	values(#{purchaseNum},#{prodNum},sysdate,#{reviewContent},
+	<if test="reviewImg != null">#{reviewImg}</if>
+	<if test="reviewImg == null">null</if>)
+</insert>
+
+<delete id="cartDelete"  parameterType="Model.CartDTO">
+	delete from cart
+	where mem_id = #{memId} and prod_num = #{prodNum}
+</delete>
+
+
+<select id="baseOrderList" parameterType="String" resultType="Model.OrderListDTO">
+   select p1.PROD_NUM prodNum, PROD_SUPPLYER prodSupplyer, PROD_NAME prodName, PROD_IMAGE prodImage,
+		   PURCHASE_DATE purchaseDate, p2.PURCHASE_NUM purchaseNum, 
+		   p3.PURCHASE_TOT_PRICE purchaseTotPrice,
+		   r.REVIEW_CONTENT reviewContent,
+		   p4.PAYMENT_APPR_NUM paymentApprNum
+	from products p1,purchase_list p2,purchase p3 ,payment p4,review r
+	where p1.PROD_NUM =p2.PROD_NUM 		
+	and   p2.PURCHASE_NUM = p3.PURCHASE_NUM			
+	and	  p2.PURCHASE_NUM = p4.PURCHASE_NUM(+)
+	and   p2.PURCHASE_NUM= r.PURCHASE_NUM(+)
+	and   p2.PROD_NUM = r.PROD_NUM(+)
+	and	  p3.mem_id = #{memId}  	
+	order by purchaseNum desc
+</select>
+
+<sql id="PAYMENTAPPRNUM">
+select to_char(sysdate,'yyyymmdd') || 
+       nvl2(max(PAYMENT_APPR_NUM),substr(max(PAYMENT_APPR_NUM),-6),100000) + 1  
+from payment 
+where substr(PAYMENT_APPR_NUM, 1, 8) = to_char(sysdate,'yyyymmdd')
+</sql>
+
+<insert id="payment" parameterType="Model.PaymentDTO">
+insert into payment (PURCHASE_NUM,PAYMENT_METHOD, PAYMENT_APPR_PRICE,
+					PAYMENT_APPR_NUM,PAYMENT_APPR_DATE, PAYMENT_NUMBER )
+values ( #{purchaseNum},#{paymentMethod},#{paymentApprPrice},
+		(<include refid="PAYMENTAPPRNUM" />), sysdate, #{paymentNumber})
+</insert>
+
+
+<insert id="purchaseListInsert" parameterType="Model.CartDTO"> 
+	insert into purchase_List(PURCHASE_NUM, PROD_NUM, PURCHASE_QTY, PURCHASE_PRICE)
+	select #{purchaseNum} , PROD_NUM, CART_QTY, CART_PRICE
+	from cart
+	where mem_id = #{memId} and prod_num = #{prodNum}
+</insert>
+  
+  <select id="cartList" parameterType="Model.CartDTO" resultMap="productCartMap">
+	select p.PROD_NUM , PROD_SUPPLYER, PROD_DEL_FEE,
+			PROD_IMAGE, PROD_NAME ,PROD_PRICE,
+			CART_PRICE, CART_QTY, mem_id
+	from  products p, cart c
+	where p.PROD_NUM = c.prod_num and c.mem_id = #{memId}
+	and p.PROD_NUM = #{prodNum}
+</select>
+ <select id="memProdNum" parameterType="string" resultType="string">
+	select prod_num from cart
+	where mem_id = #{memId}
+</select>
+<update id="goodsQtyDown" parameterType="Model.CartDTO">
+	update cart
+	set cart_qty = cart_qty - 1,
+		cart_price = cart_price - #{cartPrice}
+	where mem_id = #{memId} and prod_num = #{prodNum}
+</update>
+ <insert id="cartAdd" parameterType="Model.CartDTO">
+	MERGE into cart c1
+	using (select prod_num from products where prod_num = #{prodNum}  ) p1
+	on (c1.prod_num = p1.prod_num and c1.mem_id = #{memId})
+	When MATCHED THEN
+		update set c1.cart_qty = cart_qty + #{cartQty},
+		           c1.cart_price = cart_price + #{cartPrice}
+	When not MATCHED THEN
+		insert (c1.mem_id, c1.prod_num, c1.cart_qty, c1.cart_price)
+		values(#{memId},#{prodNum},#{cartQty},#{cartPrice})
+</insert>
+  <update id="goodsUpdate" parameterType="Model.GoodsDTO">
+  	update products 
+  	set PROD_PRICE =#{prodPrice}, PROD_DETAIL =#{prodDetail}, 
+  	PROD_CAPACITY =#{prodCapacity}, PROD_SUPPLYER =#{prodSupplyer},
+  	 PROD_DEL_FEE =#{prodDelFee}, RECOMMEND =#{recommend},
+ 	 CTGR =#{ctgr},PROD_IMAGE=#{prodImage}
+ 	 where PROD_NUM =#{prodNum}
+  </update>
+  	<!-- id는 primary key -->
+  	<!-- result는 일반컬럼 -->
+  <resultMap type="Model.GoodsDTO" id="baseResult">
+  	<id column="PROD_NUM" jdbcType="BIGINT" property="prodNum"/>
+  	<result column="PROD_NAME" jdbcType="VARCHAR" property="prodName"/>
+  	<result column="PROD_PRICE" jdbcType="BIGINT" property="prodPrice"/>
+  	<result column="PROD_IMAGE" jdbcType="VARCHAR" property="prodImage"/>
+  	<result column="PROD_DETAIL" jdbcType="VARCHAR" property="prodDetail"/>
+  	<result column="PROD_CAPACITY" jdbcType="BIGINT" property="prodCapacity"/>
+  	<result column="PROD_SUPPLYER" jdbcType="VARCHAR" property="prodSupplyer"/>
+  	<result column="PROD_DEL_FEE" jdbcType="BIGINT" property="prodDelFee"/>
+  	<result column="RECOMMEND" jdbcType="VARCHAR" property="recommend"/>
+  	<result column="EMPLOYEE_ID" jdbcType="VARCHAR" property="employeeId"/>
+  	<result column="CTGR" jdbcType="VARCHAR" property="ctgr"/>
+  	
+  
+  
+  </resultMap>
+  
+  
+	<select id="goodsDetail" parameterType="String" resultMap="baseResult">
+		select PROD_NUM ,PROD_NAME ,PROD_PRICE ,PROD_IMAGE ,
+ 	 		   PROD_DETAIL ,PROD_CAPACITY ,PROD_SUPPLYER ,
+ 	 		   PROD_DEL_FEE ,RECOMMEND ,EMPLOYEE_ID ,CTGR 
+ 		 from products
+ 		 where PROD_NUM = #{prodNum}
+	</select>
+	
+  	<select id="goodsNum" resultType="int">
+  	select prod_seq.nextval from dual
+ 	 </select>
+ 	 
+ 	 <insert id="goodsWrite" parameterType="gd">
+ 	 insert into products(PROD_NUM,PROD_NAME,PROD_PRICE,
+ 	 PROD_DETAIL,PROD_CAPACITY,PROD_SUPPLYER,PROD_DEL_FEE,RECOMMEND,EMPLOYEE_ID,CTGR,PROD_IMAGE)
+ 	 values(#{prodNum},#{prodName},#{prodPrice},
+ 	 #{prodDetail},#{prodCapacity},#{prodSupplyer},#{prodDelFee},
+ 	 #{recommend},#{employeeId},#{ctgr},
+ 	<if test="prodImage != null">#{prodImage}</if>
+	<if test="prodImage == null">null</if>
+ 	 
+ 	 )
+ 	 </insert>
+ 	 
+  <select id="goodsList"  resultType="gd">
+  select 
+  	 PROD_NUM prodNum,PROD_NAME prodName,PROD_PRICE prodPrice,PROD_IMAGE prodImage,
+ 	 PROD_DETAIL prodDetail,PROD_CAPACITY prodCapacity,PROD_SUPPLYER prodSupplyer,PROD_DEL_FEE prodDelFee,
+ 	 RECOMMEND recommend,EMPLOYEE_ID employeeId,CTGR ctgr
+  from products
+  
+  </select>
+  <delete id="goodsDel" parameterType="string">
+  	delete from products
+  where prod_num = #{prodNum}
+  
+  </delete>
+  
+  
+  </mapper>
+  
+  
+  

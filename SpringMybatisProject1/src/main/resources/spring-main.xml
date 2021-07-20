@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xsi:schemaLocation="
+			http://www.springframework.org/schema/beans
+			http://www.springframework.org/schema/beans/spring-beans.xsd
+			"
+>
+	<bean class="controller.main.MainController"/>
+	<bean class="controller.main.LogInController" />
+	<bean id = "loginService" class="service.main.LoginService"/>
+	<bean id = "logInRepository" class="repository.LogInRepository"/>
+	
+	<bean id="mailService" class="controller.MailService" />
+	<bean class="controller.ajax.AjaxController"/>
+	<bean class="service.main.IdFindFinishService" />
+	<bean class="service.main.FindPasswordService" />
+	
+</beans>
