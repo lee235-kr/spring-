@@ -17,6 +17,16 @@ public class MemberDTO {
 	String detailAdd;
 	
 	String ckOk;	
+
+	StartEndPageDTO startEndPageDTO;
+	
+	
+	public StartEndPageDTO getStartEndPageDTO() {
+		return startEndPageDTO;
+	}
+	public void setStartEndPageDTO(StartEndPageDTO startEndPageDTO) {
+		this.startEndPageDTO = startEndPageDTO;
+	}
 	public String getCkOk() {
 		return ckOk;
 	}

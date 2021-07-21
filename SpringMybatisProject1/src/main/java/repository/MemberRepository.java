@@ -13,6 +13,10 @@ public class MemberRepository {
 	
 	String namespace = "mappers.memberMapper";
 	String statement;
+	public Integer MemberCount() {
+		statement = namespace + ".MemberCount";
+		return sqlSession.selectOne(statement);
+	}
 	public String idFind(MemberDTO dto) {
 		statement = namespace + ".idFind";
 		return sqlSession.selectOne(statement, dto);
@@ -41,9 +45,9 @@ public class MemberRepository {
 		statement = namespace + ".memUpdate";
 		sqlSession.update(statement, dto);
 	}
-	public List<MemberDTO> memList(String memId) {
+	public List<MemberDTO> memList(MemberDTO dto) {
 		statement = namespace +".memList";
-		return sqlSession.selectList(statement,memId);
+		return sqlSession.selectList(statement,dto);
 	}
 	public void memJoin(MemberDTO dto) {
 		statement = namespace + ".memJoin";

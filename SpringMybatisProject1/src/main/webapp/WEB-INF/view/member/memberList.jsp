@@ -19,6 +19,10 @@
 		<td>${dto.memPhone }</td><td>${dto.memEmail }</td>
 		<td>${dto.memAddress } ${dto.detailAdd }</td></tr>
 	</c:forEach>
+		<tr><td colspan="5">
+		<%@ include file="../include/IncludePage.jsp" %>
+		
+	</td></tr>
 </table>
 </body>
 </html>

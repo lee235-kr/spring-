@@ -12,6 +12,8 @@ public class GoodsDTO {
 	String recommend;
 	String employeeId;
 	String ctgr;
+	
+	//asd
 	public Long getProdNum() {
 		return prodNum;
 	}

@@ -21,7 +21,9 @@
 		<td><fmt:formatNumber value="${dto.prodPrice }" type="currency"/></td>
 		<td>${dto.prodDelFee}</td></tr>
 	</c:forEach>
-	<tr><td colspan="8"></td></tr>	
+	<tr><td colspan="8">
+	<%@ include file="../include/IncludePage.jsp" %>
+	</td></tr>	
 </table>
 <a href="goodsRegist">상품등록</a>
 

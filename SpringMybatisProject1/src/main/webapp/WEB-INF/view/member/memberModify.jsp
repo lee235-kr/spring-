@@ -63,7 +63,7 @@
 </head>
 <body>
 <form action="../memModifyOk" method="post" name="frm"> 
-<input type="text" name="memId" value="${lists[0].memId }" />
+<input type="text" name="memId" value="${lists[0].memId }"  readonly="readonly"/>
 	<table border = 1 align="center">
 		<tr><td>아이디</td>
 			<td> ${lists[0].memId } </td></tr>
